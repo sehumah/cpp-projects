@@ -1,2 +1,3 @@
 # cpp-projects
-A directory of C++ projects.
+
+A directory of finance-focused C++ projects.
