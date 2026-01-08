@@ -9,11 +9,17 @@ Bank is a C++ console project that simulates banking operations:
 
 More features will be implemented regularly.
 
-Compile and execute the application with:
+##
+
+To run the program, first compile it with:
 
 ```bash
 g++ -std=c++20 {Account,Bank,main}.cpp -o a.out
+```
 
+then you can run the generated executable file with:
+
+```bash
 ./a.out
 ```
 
