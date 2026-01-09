@@ -1,8 +1,6 @@
 # Stock Price Stats Tool
 
-This C++ program reads a csv file of stock prices and calculates the `mean`, `variance`, `standard deviation` and `moving average`.
-
-_The moving average part is currently not implemented but will be done soon._
+This C++ program reads a csv file of stock prices and calculates the `mean`, `variance`, `standard deviation` and `simple moving average`.
 
 ##
 

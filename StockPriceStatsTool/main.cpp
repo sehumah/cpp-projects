@@ -53,7 +53,7 @@ struct Statistics {
 
 int main () {
     std::cout << "=================================\n | Stock Price Statistics Tool | \n=================================\n";
-    std::cout << "This program reads a csv file of stock prices and calculates\nthe mean, variance, standard deviation and moving average.\n\n";
+    std::cout << "This program reads a csv file of stock prices and calculates\nthe mean, variance, standard deviation and simple moving average.\n\n";
     std::cout << "Would you like to also compute the Simple Moving Average?\n1. Yes\n2. No\n\nEnter 1 or 2: ";
     int option, period;
     std::cin >> option;
