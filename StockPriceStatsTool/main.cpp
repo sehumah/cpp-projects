@@ -30,6 +30,23 @@ struct Statistics {
     float std_dev(const std::vector<float>& values) const {
         return std::sqrtf(variance(values));
     }
+
+    // Calculates SMA of the most recent N days
+    float simple_moving_average(const std::vector<float>& prices, const int& period) const {
+        if (period == 0 || period > prices.size()) {
+            return 0.0f;
+        }
+        float sma = 0.0f;
+        for (std::size_t i = 0; i < period; ++i) {
+            sma += prices.at(i);
+        }
+        return (sma / period);
+    }
+
+    /**
+     * TODO: Modify SMA function to accept end_index to enable 
+     * calculating the SMA over N days end at end_index days prior.
+     */
 };
 
 
@@ -37,6 +54,14 @@ struct Statistics {
 int main () {
     std::cout << "=================================\n | Stock Price Statistics Tool | \n=================================\n";
     std::cout << "This program reads a csv file of stock prices and calculates\nthe mean, variance, standard deviation and moving average.\n\n";
+    std::cout << "Would you like to also compute the Simple Moving Average?\n1. Yes\n2. No\n\nEnter 1 or 2: ";
+    int option, period;
+    std::cin >> option;
+    
+    if (option == 1) {
+        std::cout << "\nEnter the SMA period (no. of days): ";
+        std::cin >> period;
+    }
 
     std::vector<float> open_prices;
     std::vector<float> high_prices;
@@ -108,7 +133,7 @@ int main () {
     float std_dev_close = statistics.std_dev(var_close);
 
     // Print values
-    std::cout << "|==========================================================|\n";
+    std::cout << "\n|==========================================================|\n";
     std::cout << "|          |    Open   |    High   |     Low   |   Close   |\n";
     std::cout << "|==========================================================|\n";
     std::printf("|     Mean |%11f|%11f|%11f|%11f|\n", avg_open, avg_high, avg_low, avg_close);
@@ -117,5 +142,10 @@ int main () {
     std::cout << "|----------------------------------------------------------|\n";
     std::printf("| Std. Dev |%11f|%11f|%11f|%11f|\n", std_dev_open, std_dev_high, std_dev_low, std_dev_close);
     std::cout << "|==========================================================|\n\n";
+
+    // calculate & display SMA
+    if (option == 1 && period != 0) {
+        std::cout << "The Simple Moving Average over a " << period << " day period is: " << statistics.simple_moving_average(close_prices, period) << ".\n\n";
+    }
     return 0;
 }
