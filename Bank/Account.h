@@ -8,15 +8,19 @@ private:
     struct Owner {
         std::string first_name;
         std::string last_name;
-        std::string full_name;
+        const std::string full_name () const {
+            return first_name + ' ' + last_name;
+        }
     };
 
 public:
     Owner owner;
     std::string number;
-    float balance = 0.0;
+    double balance;
+    double loan;
     Account(const std::string first_name, const std::string last_name, const std::string number);
     ~Account();
+    void reset();
 };
 
 #endif  // ACCOUNT_H

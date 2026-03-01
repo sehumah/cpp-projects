@@ -15,13 +15,15 @@ int main() {
     do {
         // print menu & take input
         std::cout <<"\n|======================|\n";
+        std::cout <<"|======== MENU ========|\n";
+        std::cout <<"|======================|\n";
         std::cout <<"| 1. Open an account   |\n";
         std::cout <<"| 2. Deposit money     |\n";
         std::cout <<"| 3. Withdraw money    |\n";
         std::cout <<"| 4. Transfer money    |\n";
-        // std::cout <<"| 5. Get a loan        |\n";
+        std::cout <<"| 5. Get a loan        |\n";
         std::cout <<"| 6. View all accounts |\n";
-        // std::cout <<"| 7. Close an account  |\n";
+        std::cout <<"| 7. Close an account  |\n";
         std::cout <<"| 8. Exit              |\n";
         std::cout <<"|======================|\n";
         std::cout <<"\nSelect an option: ";
@@ -42,19 +44,19 @@ int main() {
                 bank.transferMoney();
                 break;
             case 5:  // loan
+                bank.getLoan();
                 break;
             case 6:  // view all accounts
                 bank.printAccounts();
                 break;
             case 7:  // account termination
+                bank.closeAccount();
                 break;
             case 8:  // exit
-                std::cout << "Goodbye! Have a nice day.\n";
-                exit(0);
+                std::cout << "\nGoodbye! Have a nice day.\n\n";
                 break;
             default:
-                std::cout << "Invalid input. Goodbye!\n";
-                exit(-1);
+                std::cout << "\nInvalid input.\n\n";
                 break;
         }
     } while (option != 8);

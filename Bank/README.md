@@ -2,10 +2,11 @@
 
 Bank is a C++ console project that simulates banking operations:
 
-- Opening accounts
-- Deposits
-- Withdrawals
-- Account-to-Account Money Transfers
+- Opening & closing accounts
+- Deposit
+- Withdrawal
+- Account-to-account money transfer
+- Bank loan
 
 More features will be implemented regularly.
 
@@ -31,4 +32,7 @@ __Version 1__ has the following features:
 - depositing money
 - withdrawing money
 - transfering money
-- viewing all accounts
+- getting a bank loan
+- viewing accounts
+- closing accounts
+- a CSV file to keep track of all accounts
