@@ -4,7 +4,8 @@
 
 
 struct Order {
-    std::size_t id;  // hash value of the order's timestamp
+    // std::size_t id;  // hash value of the order's timestamp
+    int id;
     int price;
     int quantity;
     Side side;
