@@ -2,6 +2,11 @@
 
 #include <map>
 #include <random>
+#include <string>
+#include <chrono>
+#include <ctime>
+#include <unordered_map>
+#include <algorithm>
 #include "PriceLevel.h"
 
 
@@ -9,10 +14,12 @@ struct OrderBook {
     private:
         std::map<int, PriceLevel, std::greater<int>> bids;
         std::map<int, PriceLevel, std::less<int>> asks;
-        std::random_device rd;
+        std::unordered_map<int, Order> order_lookup_table;
+        int order_id = 1;
         
         /*  Helper Functions  */
         const int generate_int(const int& a, const int& b) {
+            std::random_device rd;
             std::mt19937 rng(rd());
             std::uniform_int_distribution<int> int_distribution(a, b);
             return int_distribution(rng);
@@ -52,7 +59,11 @@ struct OrderBook {
 
 
         //
-        void add_order(const Order& order) {
+        const int add_order(int &side, int &price, int &quantity) {
+            // std::time_t timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            // Order order {order_id++, price, quantity, static_cast<Side>(side), timestamp};
+            Order order {order_id++, price, quantity, static_cast<Side>(side), std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
+
             switch(order.side) {
                 case Side::buy:
                     if(!bids.contains(order.price)) {
@@ -69,34 +80,96 @@ struct OrderBook {
                 default:
                     break;
             }
-        }
 
-
-        /*
-        void cancel_order(Order order) {  // cancel and remove order
-            switch (order.side) {
+            /*
+            switch(static_cast<Side>(side)) {
                 case Side::buy:
-                    if (bids.contains(order.price)) {
-                        // auto orders = bids.at(order.price).orders;
-                        // find the order by id
-                        std::list<Order>::const_iterator it = std::find(bids.at(order.price).orders.cbegin(), bids.at(order.price).orders.cend(), order.id);
-                        
-                        // use the iterator to remove the order from the list
-                        bids.at(order.price).orders.erase(it);
-                    }
+                    auto [price_level_it, inserted] = bids.try_emplace(price, PriceLevel(price));
+                    price_level_it->second.orders.emplace_back(order_id++, price, quantity, static_cast<Side>(side), std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+                    auto order_it = std::prev(price_level_it->second.orders.cend());
                     break;
                 case Side::sell:
-                    if (asks.contains(order.price)) {
-                        auto orders = asks.at(order.price).orders;
-                        std::list<Order>::const_iterator it = std::find(orders.cbegin(), orders.cend(), order.price);
-                        orders.erase(it);
-                    }
+                    auto [price_level_it, _] = asks.try_emplace(price, PriceLevel(price));
+                    price_level_it->second.orders.emplace_back(order_id++, price, quantity, static_cast<Side>(side), std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+                    std::list<Order>::iterator order_it = std::prev(price_level_it->second.orders.end());
+                    // save order iterator in the lookup
+                    // order_lookup_table.emplace(order_it->id, order_it);
                     break;
                 default:
                     break;
             }
+            */
+            order_lookup_table.emplace(order.id, order);
+            return order.id;
         }
-        */
+
+
+        const bool cancel_order(int& id) {  // cancel and remove order
+            // check if the order exists
+            if (order_lookup_table.contains(id)) {
+                // get the order & remove it from the appropriate list
+                auto order = order_lookup_table.at(id);
+                std::size_t removed_order;
+                switch (order.side) {
+                    case Side::buy:
+                        // remove order from price level
+                        removed_order = bids.at(order.price).orders.remove_if([&order](Order& o){ return o.id == order.id; });
+                        
+                        // remove price level if it becomes empty
+                        if (bids.at(order.price).orders.empty()) {
+                            bids.erase(order.price);
+                        }
+                        break;
+                    case Side::sell:
+                        // remove order from price level
+                        removed_order = asks.at(order.price).orders.remove_if([&order](Order& o){ return o.id == order.id; });
+
+                        // remove price level if it becomes empty
+                        if (asks.at(order.price).orders.empty()) {
+                            asks.erase(order.price);
+                        }
+                        break;
+                }
+
+                // now remove order from lookup table
+                order_lookup_table.erase(order.id);
+                return true;
+            }
+            return false;
+        }
+
+
+        // uses the order ID to modify the order's price or quantity
+        const bool modify_order(int& id, int& quantity) {
+            // get the order from the lookup table
+            Order order = order_lookup_table.at(id);
+
+            // get the order's side, find it from the appropriate map:list, change the order's quantity & return success/failure
+            if(order.side == Side::buy) {
+                auto& buy_orders = bids.at(order.price).orders;
+                auto it = std::find_if(buy_orders.begin(), buy_orders.end(), [&order](const Order& o) { return o.id == order.id; });
+                if(it != buy_orders.end()) {
+                    it->quantity = quantity;
+                    return true;
+                }
+            } else if(order.side == Side::sell) {
+                auto& sell_orders = asks.at(order.price).orders;
+                auto it = std::find_if(sell_orders.begin(), sell_orders.end(), [&order](const Order& o) { return o.id == order.id; });
+                if(it != sell_orders.end()) {
+                    it->quantity = quantity;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        const bool has_order(int& id) const {
+            return order_lookup_table.contains(id);
+        }
+
+        const Order get_order(int& id) const {
+            return order_lookup_table.at(id);
+        }
 
 
         // 
@@ -131,12 +204,8 @@ struct OrderBook {
         void print_bids() const {
             std::cout << "\nBids:\n-----\n";
             // for(std::map<int, PriceLevel, std::greater<int>>::const_iterator it = bids.cbegin(); it != bids.cend(); ++it) {}
-            for(const auto&[price, price_level]: bids) {
-                if(price_level.orders.size() > 1) {
-                    std::cout << "[" << price << "] = " << price_level.orders.size() << " bids\n";
-                } else {
-                    std::cout << "[" << price << "] = " << price_level.orders.size() << " bid\n";
-                }
+            for(const auto& [price, price_level]: bids) {
+                std::cout << "[" << price << "] = " << price_level.orders.size() << (price_level.orders.size() == 1 ? " bid\n" : " bids\n");
             }
         }
 
@@ -145,12 +214,8 @@ struct OrderBook {
         void print_asks() const {
             std::cout << "\nAsks:\n-----\n";
             // for(std::map<int, PriceLevel, std::less<int>>::const_iterator it = asks.cbegin(); it != asks.cend(); ++it) {}
-            for(const auto&[price, price_level]: asks) {
-                if(price_level.orders.size() > 1) {
-                    std::cout << "[" << price << "] = " << price_level.orders.size() << " asks\n";
-                } else {
-                    std::cout << "[" << price << "] = " << price_level.orders.size() << " ask\n";
-                }
+            for(const auto& [price, price_level]: asks) {
+                std::cout << "[" << price << "] = " << price_level.orders.size() << (price_level.orders.size() == 1 ? " ask\n" : " asks\n");
             }
         }
 
@@ -158,7 +223,6 @@ struct OrderBook {
         // 
         void print_orderbook() const {
             print_asks();
-            // std::cout << "\n--------------------\n";
             std::cout << "\n";
             print_bids();
         }
