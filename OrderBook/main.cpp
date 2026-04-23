@@ -1,8 +1,4 @@
 #include <iostream>
-#include <string>
-#include <chrono>
-#include <ctime>
-
 #include "OrderBook.h"
 
 
@@ -41,18 +37,19 @@
 
 
 int main() {
-    std::cout << "\n========================\n  C++ LIMIT ORDER BOOK\n========================\n";
+    std::cout << "\n==========================\n   C++ LIMIT ORDER BOOK\n==========================";
     OrderBook orderbook;
-    int option;
+    int option, side, price, quantity, orderID;
 
     do {
-        std::cout << "\n|--------------------|\n|        MENU        |\n|--------------------|\n| 1. Place an order  |\n| 2. View order book |\n|--------------------|\n\nSelect an option: ";
+        std::cout << "\n|------------------------|\n|          MENU          |\n|------------------------|\n| 1. View order book     |\n| 2. Place an order      |\n| 3. Modify an order     |\n| 4. Cancel an order     |\n| 5. Execute order       |\n| 6. Get best ask        |\n| 7. Get best bid        |\n| 8. View bid-ask spread |\n| 0. Exit program        |\n|------------------------|\n\nSelect an option: ";
         std::cin >> option;
-        
         switch (option) {
-            case 1:
+            case 1:  // VIEW ORDER BOOK
+                orderbook.print_orderbook();
+                break;
+            case 2:  // PLACE AN ORDER
                 std::cout << "\n-----------------\n| Placing Order |\n-----------------\n| 1. BUY order  |\n| 2. SELL order |\n-----------------\nSelect order type: ";
-                int side, price, quantity;
                 std::cin >> side;
                 std::cout << "\nEnter order price: ";
                 std::cin >> price;
@@ -60,27 +57,59 @@ int main() {
                 std::cin >> quantity;
 
                 if (side == 1 || side == 2) {
-                    // get timepoint at the moment & convert it to time_t
-                    std::time_t timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-                    // pass a now_t pointer to std::ctime & create a hash to generate unique ID for the order
-                    std::size_t id = std::hash<std::string>{}(std::ctime(&timestamp));
-
-                    // add the order to the orders
-                    orderbook.add_order({id, price, quantity, (side == 1 ? Side::buy : Side::sell), timestamp});
-
-                    // create Order object and add it to the orders
-                    // Order order{id, price, quantity, (side == 1 ? Side::buy : Side::sell), timestamp};
-                    // orderbook.add_order(order);
+                    int result = orderbook.add_order(side, price, quantity);
+                    std::cout << "\nA new " << (side == 1 ? "BUY" : "SELL") << " order has been added.\nOrder id is: " << result << ".\n";
                 }
                 break;
-            case 2:
-                orderbook.print_orderbook();
+            case 3:  // MODIFY AN ORDER
+                std::cout << "\n-------------------\n| Modifying Order |\n-------------------\nYou can only modify an order's quantity.\n\nEnter order ID to proceed: ";
+                std::cin >> orderID;
+                // TODO: has_order should be a private method that shouldn't be accessible outside the orderbook class
+                if (orderbook.has_order(orderID)) {
+                    Order order = orderbook.get_order(orderID);
+                    std::cout << "\nThe " << (order.side == Side::buy ? "BUY" : "SELL") << " order with id (" << order.id << ") has a quantity of " << order.quantity << ".\nEnter the new quantity: ";
+                    std::cin >> quantity;
+                    if (quantity > 0) {
+                        if (orderbook.modify_order(orderID, quantity)) {
+                            std::cout << "\nOrder with ID (" << order.id << ") successfully modified.\n";
+                        } else {
+                            std::cout << "\nOrder modification unsuccessful.\n";
+                        }
+                    }
+                } else {
+                    std::cout << "\nNo order with ID (" << orderID << ") found.\n";
+                }
+                break;
+            case 4:  // CANCEL AN ORDER
+                std::cout << "\n-------------------\n| Canceling Order |\n-------------------\n\nEnter order ID to proceed: ";
+                std::cin >> orderID;
+                if (orderbook.cancel_order(orderID)) {
+                    std::cout << "\nOrder with ID (" << orderID << ") successfully cancelled.\n";
+                } else {
+                    std::cout << "\nNo order with ID (" << orderID << ") exists.\n";
+                }
+                break;
+            case 5:  // EXECUTE ORDER
+                break;
+            case 6:  // BEST ASK
+                std::cout << "\n------------\n| Best Ask |\n------------\n";
+                std::cout << "Best ask: " << orderbook.best_ask() << '\n';
+                break;
+            case 7:  // BEST BID
+                std::cout << "\n------------\n| Best Bid |\n------------\n";
+                std::cout << "Best bid: " << orderbook.best_bid() << '\n';
+                break;
+            case 8:  // BID-ASK SPREAD
+                std::cout << "\n------------------\n| Bid-Ask Spread |\n------------------\n";
+                break;
+            case 0:
+                std::cout << "\nGoodbye!\n\n";
+                std::exit(EXIT_SUCCESS);
                 break;
             default:
                 break;
         }
-    } while(option == 1 || option == 2);
+    } while(option != 0);
 
     std::cout << std::endl;
     return 0;
