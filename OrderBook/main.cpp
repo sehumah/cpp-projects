@@ -101,6 +101,7 @@ int main() {
                 break;
             case 8:  // BID-ASK SPREAD
                 std::cout << "\n------------------\n| Bid-Ask Spread |\n------------------\n";
+                std::cout << "Bid-Ask spread: " << orderbook.bid_ask_spread() << '\n';
                 break;
             case 0:
                 std::cout << "\nGoodbye!\n\n";
